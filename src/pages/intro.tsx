@@ -1,14 +1,7 @@
 // Intro.tsx
-import { useRouter } from "next/router";
 import Image from "next/image";
 
 const Intro = (): JSX.Element => {
-  const router = useRouter();
-
-  const handleGetStartedClick = async () => {
-    router.push("/login");
-  };
-
   return (
     <div className="flex items-center justify-center h-screen bg-[#000000]">
       <div className="text-center text-white relative flex items-center">

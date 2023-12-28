@@ -1,27 +1,48 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-dotenv.config();
-//import {supabase} from './sb';
-//import supabase from './error';
+import { useSession } from 'next-auth/react'; // Import useSession
+import supabase from './auth';
+const getURL = () => {
+  let url =
+    process?.env?.NEXT_PUBLIC_SITE_URL ??
+    process?.env?.NEXT_PUBLIC_VERCEL_URL ??
+    'http://localhost:3000/';
 
-const supabaseUrl:string= process.env.SURL! ||'';
-const supabaseKey:string = process.env.SKEY ||'';
+  // Make sure to include a trailing `/`.
+  url = url.charAt(url.length - 1) === '/' ? url : `${url}/`;
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+  return url;
+};
 
-
-//</error>
 
 const Login = () => {
   const router = useRouter();
+  const { data: session } = useSession(); // Use useSession hook
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (session?.user && router.pathname !== '/mainpage') {
+        console.log('User authenticated:', session.user);
+        router.push('/mainpage');
+      } else if (!session?.user) {
+        console.log('User not authenticated, redirecting to login');
+        router.push('/login');
+      }
+    };
+  
+    checkAuth();
+  }, [session, router.pathname]);
+  
+  
+    // Re-run the effect when the session changes
 
   const handleLoginWithGoogle = async () => {
     try {
       const { error, data } = await supabase.auth.signInWithOAuth({
         provider: 'google',
+        options:{
+          redirectTo: getURL() + 'mainpage',
+        }
       });
 
       if (error) {
@@ -29,9 +50,7 @@ const Login = () => {
         console.error('Google authentication error:', castedError.message);
       } else {
         console.log('Google authentication successful!', data);
-
-        // Redirect to the main page after successful authentication
-        router.push('/mainpage'); // Adjust the route as needed
+        router.push('/mainpage');
       }
     } catch (error: any) {
       console.error('Error during Google authentication:', error.message);
